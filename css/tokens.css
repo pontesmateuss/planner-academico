@@ -1,0 +1,52 @@
+/* Design tokens: todas as cores e fontes do site. Tema claro em :root, tema escuro em [data-theme="dark"].
+   Cor: tons suaves verde-azulados, sem preto nem branco puros, para reduzir o brilho e o halo ao redor do texto.
+   Tipo: Lexend nos títulos, Atkinson Hyperlegible no texto (feita para leitura confortável). */
+:root {
+  --bg: #E8EFEC;
+  --surface: #F5F8F6;
+  --field: #FBFCFB;
+  --fg: #24343A;
+  --muted: #506268;
+  --line: #C5D3CE;
+  --line-strong: #8FA39D;
+  --accent: #2D6B67;
+  --accent-fg: #F5F8F6;
+  --accent-soft: #D2E5E0;
+  --late-bg: #F1DED6;
+  --late-fg: #80432F;
+  --t-ativ-bg: #D2E5E0;
+  --t-ativ-fg: #245652;
+  --t-prova-bg: #F0E4C4;
+  --t-prova-fg: #6E5210;
+  --t-trab-bg: #DAE2F0;
+  --t-trab-fg: #34476A;
+  --t-lemb-bg: #E4E3EE;
+  --t-lemb-fg: #4A476B;
+  --nav-bg: #121F22;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --font-head: "Lexend", "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --bg: #1E2A2C;
+  --surface: #273436;
+  --field: #2D3C3E;
+  --fg: #DCE6E3;
+  --muted: #A5B8B3;
+  --line: #3B4D4F;
+  --line-strong: #6F8985;
+  --accent: #8CC5BE;
+  --accent-fg: #1B2829;
+  --accent-soft: #34504E;
+  --late-bg: #4A3A33;
+  --late-fg: #EBC3B3;
+  --t-ativ-bg: #34504E;
+  --t-ativ-fg: #C7E4DF;
+  --t-prova-bg: #4F4423;
+  --t-prova-fg: #EBD9A0;
+  --t-trab-bg: #34405C;
+  --t-trab-fg: #CBD7F0;
+  --t-lemb-bg: #403F59;
+  --t-lemb-fg: #D6D4EC;
+  color-scheme: dark;
+}

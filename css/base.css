@@ -1,0 +1,25 @@
+/* Base: reset, tipografia e foco. Usa apenas variáveis de tokens.css. */
+[hidden] { display: none !important; }
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 1.125rem;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  padding-inline: 1rem;
+  padding-block: 0 5rem;
+}
+h1, h2, h3 {
+  font-family: var(--font-head);
+  font-weight: 600;
+  text-wrap: balance;
+  margin: 0;
+}
+h1 { font-size: 1.9rem; line-height: 1.2; }
+h2 { font-size: 1.3rem; line-height: 1.3; }
+h3 { font-size: 1.05rem; line-height: 1.3; }
+p { margin: 0; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
