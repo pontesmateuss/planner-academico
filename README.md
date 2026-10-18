@@ -66,7 +66,7 @@ Se o navegador ou a conta tiver dados de uma versão **mais nova** que a do site
 
 ## Testes
 
-Rode `npm test` na pasta do projeto (precisa só do Node 20 ou mais novo). Os testes ficam em `tests/` e cobrem a validação de dados, as migrações de versão, a leitura de backup e o salvamento no navegador.
+Rode `npm test` na pasta do projeto (precisa só do Node 22 ou mais novo). Os testes ficam em `tests/` e cobrem a validação de dados, as migrações de versão, a leitura de backup, o salvamento no navegador e a estrutura do projeto (imports que existem, sem ciclos, ids usados no JavaScript que existem no `index.html`, arquivos citados no HTML que existem).
 
 ## Regras para manter a organização
 
