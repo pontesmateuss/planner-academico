@@ -27,8 +27,9 @@ planner-academico/
 │   ├── toast.js          Aviso com "Desfazer"
 │   ├── theme.js          Tema claro e escuro
 │   ├── ics.js            Monta o arquivo de agenda .ics (funções puras)
+│   ├── reminders.js      Decide quais avisos de prazo mostrar (funções puras)
 │   ├── backup.js         Baixar e restaurar backup (monta a própria seção na página)
-│   ├── agenda.js         Exportar prazos para a agenda (monta a própria seção na página)
+│   ├── agenda.js         Exportar prazos para a agenda e ativar avisos (monta a própria seção na página)
 │   ├── pwa.js            Registra o service worker
 │   ├── actions.js        Eventos e ações do usuário
 │   └── main.js           Ponto de entrada
@@ -45,7 +46,7 @@ planner-academico/
 - Todo CSS usa as variáveis de `tokens.css`. Para mudar uma cor, edite só esse arquivo.
 - Os módulos JavaScript importam uns aos outros com caminhos relativos e sempre na mesma direção, sem ciclos:
 
-  `config, utils, pwa` → `validate, dates` → `state` → `selectors, seed, storage, ics` → `render, toast` → `backup, agenda` → `actions` → `main`
+  `config, utils, pwa` → `validate, dates` → `state` → `selectors, seed, storage, ics, reminders` → `render, toast` → `backup, agenda` → `actions` → `main`
 
 - O que o JavaScript procura no HTML são os `id` (por exemplo `form`, `lista`, `filtros`, `status`, `toast`, `tema`). Se renomear um `id` no `index.html`, troque também nos módulos.
 - As imagens são referenciadas só em `index.html`, a partir de `assets/img/`.
@@ -76,6 +77,10 @@ A seção **Agenda e lembretes** tem o botão **Exportar prazos para a agenda (.
 
 Cada evento usa o id do item como identificador, então exportar de novo costuma atualizar os mesmos eventos em vez de duplicar. Itens concluídos ou apagados depois de exportados continuam na agenda até serem removidos por lá. Esses lembretes são da própria agenda, então tocam mesmo com o site fechado.
 
+**Avisos neste aparelho.** O botão **Ativar avisos neste aparelho** pede permissão ao navegador e passa a mostrar notificações: uma quando faltar 1 hora (ou menos) para um prazo com horário, e um **resumo do dia** (o que vence hoje e quantos itens estão atrasados), uma vez por dia, a partir das 8h. Cada aviso aparece uma só vez; a lista do que já foi avisado fica guardada no navegador por 7 dias. Tocar na notificação volta para o Planner.
+
+Limite importante: os avisos só aparecem **enquanto o Planner está aberto** (numa aba ou como app instalado), porque um site estático não tem como acordar o aparelho sozinho. No celular, o sistema pode pausar o app em segundo plano. Para lembretes que tocam com tudo fechado, use a exportação para a agenda. Se o navegador bloquear as notificações, a seção avisa e explica que é preciso liberar nas configurações dele.
+
 ## Instalar como app e abrir sem internet
 
 O site é um PWA. No Android (Chrome) e no computador (Chrome ou Edge), abra o menu do navegador e escolha **Instalar app** ou **Adicionar à tela inicial**. No iPhone (Safari), use **Compartilhar → Adicionar à Tela de Início**. Instalado, ele abre em tela cheia, com o ícone do Planner.
@@ -86,7 +91,7 @@ Ao criar, renomear ou apagar um arquivo do site (um módulo novo em `js/`, por e
 
 ## Testes
 
-Rode `npm test` na pasta do projeto (precisa só do Node 22 ou mais novo). Os testes ficam em `tests/` e cobrem a validação de dados, as migrações de versão, a leitura de backup, o salvamento no navegador, o PWA (lista de arquivos do service worker, manifest, ícones e o comportamento do service worker com e sem internet) e a estrutura do projeto (imports que existem, sem ciclos, ids usados no JavaScript que existem no `index.html`, arquivos citados no HTML que existem).
+Rode `npm test` na pasta do projeto (precisa só do Node 22 ou mais novo). Os testes ficam em `tests/` e cobrem a validação de dados, as migrações de versão, a leitura de backup, o salvamento no navegador, a exportação para a agenda (`.ics`), os avisos de prazo, o PWA (lista de arquivos do service worker, manifest, ícones e o comportamento do service worker com e sem internet) e a estrutura do projeto (imports que existem, sem ciclos, ids usados no JavaScript que existem no `index.html`, arquivos citados no HTML que existem).
 
 O GitHub roda os mesmos testes sozinho, no Node 22 e no 24, a cada envio para a `main` e em todo pull request (arquivo `.github/workflows/testes.yml`). Se algo quebrar, aparece um X vermelho no commit ou no pull request, e o botão de juntar fica com um aviso. Para ver o motivo, abra a aba **Actions** do repositório.
 

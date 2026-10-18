@@ -28,6 +28,7 @@ const PRECACHE = [
   'js/dates.js',
   'js/ics.js',
   'js/pwa.js',
+  'js/reminders.js',
   'js/render.js',
   'js/seed.js',
   'js/selectors.js',
@@ -72,6 +73,17 @@ self.addEventListener('fetch', (event) => {
   } else if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
     event.respondWith(staleWhileRevalidate(req));
   }
+});
+
+// Ao tocar numa notificação de prazo: volta para o Planner se ele já estiver aberto, ou abre.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
+      const open = windows.find((c) => 'focus' in c);
+      return open ? open.focus() : self.clients.openWindow('./');
+    })
+  );
 });
 
 async function networkFirst(req) {

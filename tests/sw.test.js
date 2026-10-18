@@ -18,7 +18,7 @@ const FONT_CACHE = 'planner-academico-fontes';
 function createWorker() {
   const handlers = {};
   const stores = new Map(); // nome do cache -> Map(url -> Response)
-  const calls = { skipWaiting: 0, claim: 0, fetches: [] };
+  const calls = { skipWaiting: 0, claim: 0, fetches: [], windows: [], opened: [] };
   const net = { online: true, status: 200 };
 
   const keyOf = (r) => new URL(typeof r === 'string' ? r : r.url, BASE).href;
@@ -35,7 +35,11 @@ function createWorker() {
       location: { origin: new URL(BASE).origin },
       addEventListener: (type, fn) => { handlers[type] = fn; },
       skipWaiting: () => { calls.skipWaiting++; return Promise.resolve(); },
-      clients: { claim: () => { calls.claim++; return Promise.resolve(); } }
+      clients: {
+        claim: () => { calls.claim++; return Promise.resolve(); },
+        matchAll: async () => calls.windows,
+        openWindow: async (url) => { calls.opened.push(url); }
+      }
     },
     fetch: async (r, init) => {
       const url = keyOf(r);
@@ -166,4 +170,21 @@ test('ignora pedidos que não são GET e outros sites', async () => {
   assert.equal(post.handled, false);
   const other = await w.dispatch('fetch', { request: w.get('https://exemplo.com/script.js') });
   assert.equal(other.handled, false);
+});
+
+test('toque na notificação: fecha o aviso e volta para a aba do Planner, se estiver aberta', async () => {
+  const w = createWorker();
+  let closed = 0;
+  let focused = 0;
+  w.calls.windows.push({ focus: async () => { focused++; } });
+  await w.dispatch('notificationclick', { notification: { close: () => { closed++; } } });
+  assert.equal(closed, 1);
+  assert.equal(focused, 1);
+  assert.deepEqual(w.calls.opened, []);
+});
+
+test('toque na notificação: abre o Planner se não houver nenhuma aba aberta', async () => {
+  const w = createWorker();
+  await w.dispatch('notificationclick', { notification: { close: () => {} } });
+  assert.deepEqual(w.calls.opened, ['./']);
 });
