@@ -52,9 +52,21 @@ Fora de uma página com conta (por exemplo, no GitHub Pages), os dados existem s
 
 Todo dado que entra (do navegador, da conta ou de um arquivo importado) passa por `validate.js`, que descarta o que não serve e corrige o que dá para corrigir.
 
+## Versão dos dados
+
+Tudo que é salvo (no navegador, na conta e nos backups) leva um número de versão, `DATA_VERSION`, em `js/validate.js`. Dados antigos, sem número, valem como versão 0 e são convertidos ao carregar. Antes da conversão, uma cópia do original fica guardada, então nada se perde se algo der errado.
+
+Para mudar o formato dos itens (por exemplo, adicionar um campo):
+
+1. Em `validate.js`, some 1 a `DATA_VERSION`.
+2. Em `MIGRATIONS`, acrescente a conversão da versão anterior. Exemplo, de 1 para 2: `1: (d) => ({ ...d, items: d.items.map((i) => ({ ...i, novoCampo: '' })) })`.
+3. Atualize `sanitizeItem` para aceitar o campo novo e escreva um teste em `tests/migrate.test.js`.
+
+Se o navegador ou a conta tiver dados de uma versão **mais nova** que a do site (por exemplo, uma página antiga guardada em cache), o site não carrega nem sobrescreve esses dados: avisa na linha de status e trava o salvamento até a página ser atualizada.
+
 ## Testes
 
-Rode `npm test` na pasta do projeto (precisa só do Node 20 ou mais novo). Os testes ficam em `tests/` e cobrem a validação de dados e a leitura de backup.
+Rode `npm test` na pasta do projeto (precisa só do Node 20 ou mais novo). Os testes ficam em `tests/` e cobrem a validação de dados, as migrações de versão, a leitura de backup e o salvamento no navegador.
 
 ## Regras para manter a organização
 
