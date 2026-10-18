@@ -2,7 +2,7 @@
    Monta a própria seção na página (logo abaixo da lista), então não precisa mexer no index.html. */
 
 import { STORAGE_KEY } from './config.js';
-import { $, el } from './utils.js';
+import { $, el, download } from './utils.js';
 import { today, isoDay } from './dates.js';
 import { state, ui, replaceData } from './state.js';
 import { persist, getCorruptRaw } from './storage.js';
@@ -19,17 +19,6 @@ function readLast() {
 
 function writeLast(value) {
   try { localStorage.setItem(LAST_KEY, value); } catch (e) { /* ignora */ }
-}
-
-function download(name, content, type) {
-  const url = URL.createObjectURL(new Blob([content], { type }));
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = name;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function refreshInfo() {

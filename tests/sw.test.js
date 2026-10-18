@@ -12,7 +12,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const code = readFileSync(join(root, 'sw.js'), 'utf8');
 
 const BASE = 'https://exemplo.github.io/planner-academico/';
-const CACHE = 'planner-academico-v1';
+const CACHE = 'planner-academico-v' + code.match(/const CACHE_VERSION = (\d+);/)[1];
 const FONT_CACHE = 'planner-academico-fontes';
 
 function createWorker() {

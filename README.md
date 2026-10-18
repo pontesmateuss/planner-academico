@@ -26,7 +26,9 @@ planner-academico/
 │   ├── render.js         Desenho da tela
 │   ├── toast.js          Aviso com "Desfazer"
 │   ├── theme.js          Tema claro e escuro
+│   ├── ics.js            Monta o arquivo de agenda .ics (funções puras)
 │   ├── backup.js         Baixar e restaurar backup (monta a própria seção na página)
+│   ├── agenda.js         Exportar prazos para a agenda (monta a própria seção na página)
 │   ├── pwa.js            Registra o service worker
 │   ├── actions.js        Eventos e ações do usuário
 │   └── main.js           Ponto de entrada
@@ -43,7 +45,7 @@ planner-academico/
 - Todo CSS usa as variáveis de `tokens.css`. Para mudar uma cor, edite só esse arquivo.
 - Os módulos JavaScript importam uns aos outros com caminhos relativos e sempre na mesma direção, sem ciclos:
 
-  `config, utils, pwa` → `validate, dates` → `state` → `selectors, seed, storage` → `render, toast` → `backup` → `actions` → `main`
+  `config, utils, pwa` → `validate, dates` → `state` → `selectors, seed, storage, ics` → `render, toast` → `backup, agenda` → `actions` → `main`
 
 - O que o JavaScript procura no HTML são os `id` (por exemplo `form`, `lista`, `filtros`, `status`, `toast`, `tema`). Se renomear um `id` no `index.html`, troque também nos módulos.
 - As imagens são referenciadas só em `index.html`, a partir de `assets/img/`.
@@ -67,6 +69,12 @@ Para mudar o formato dos itens (por exemplo, adicionar um campo):
 3. Atualize `sanitizeItem` para aceitar o campo novo e escreva um teste em `tests/migrate.test.js`.
 
 Se o navegador ou a conta tiver dados de uma versão **mais nova** que a do site (por exemplo, uma página antiga guardada em cache), o site não carrega nem sobrescreve esses dados: avisa na linha de status e trava o salvamento até a página ser atualizada.
+
+## Agenda e lembretes
+
+A seção **Agenda e lembretes** tem o botão **Exportar prazos para a agenda (.ics)**. O arquivo funciona no Google Agenda, no Calendário da Apple e no Outlook: abra-o (ou importe pela agenda) e cada prazo pendente vira um evento com lembretes. Prazo sem horário vira evento de dia inteiro, com lembrete na véspera e no dia, às 9h. Prazo com horário vira evento de 1 hora, com lembrete 1 dia e 1 hora antes. Itens de exemplo, concluídos ou sem data não são exportados.
+
+Cada evento usa o id do item como identificador, então exportar de novo costuma atualizar os mesmos eventos em vez de duplicar. Itens concluídos ou apagados depois de exportados continuam na agenda até serem removidos por lá. Esses lembretes são da própria agenda, então tocam mesmo com o site fechado.
 
 ## Instalar como app e abrir sem internet
 
