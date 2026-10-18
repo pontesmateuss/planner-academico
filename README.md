@@ -15,6 +15,7 @@ planner-academico/
 ├── js/                   Comportamento (JavaScript, módulos ES)
 │   ├── config.js         Constantes e textos
 │   ├── utils.js          $, el, uid
+│   ├── validate.js       Validação e limpeza dos dados, leitura de backup (funções puras)
 │   ├── dates.js          Datas e prazos (funções puras)
 │   ├── state.js          Estado compartilhado (dados e tela)
 │   ├── selectors.js      Filtro por matéria e contagens
@@ -23,8 +24,11 @@ planner-academico/
 │   ├── render.js         Desenho da tela
 │   ├── toast.js          Aviso com "Desfazer"
 │   ├── theme.js          Tema claro e escuro
+│   ├── backup.js         Baixar e restaurar backup (monta a própria seção na página)
 │   ├── actions.js        Eventos e ações do usuário
 │   └── main.js           Ponto de entrada
+├── tests/                Testes automáticos (rodam com `npm test`, sem instalar nada)
+├── package.json          Só define `npm test` e o tipo de módulo
 └── assets/
     └── img/              logo-icone.png (cabeçalho) e logo-horizontal.png (barra de navegação)
 ```
@@ -35,7 +39,7 @@ planner-academico/
 - Todo CSS usa as variáveis de `tokens.css`. Para mudar uma cor, edite só esse arquivo.
 - Os módulos JavaScript importam uns aos outros com caminhos relativos e sempre na mesma direção, sem ciclos:
 
-  `config, utils` → `dates` → `state` → `selectors, seed, storage` → `render, toast` → `actions` → `main`
+  `config, utils` → `validate, dates` → `state` → `selectors, seed, storage` → `render, toast` → `backup` → `actions` → `main`
 
 - O que o JavaScript procura no HTML são os `id` (por exemplo `form`, `lista`, `filtros`, `status`, `toast`, `tema`). Se renomear um `id` no `index.html`, troque também nos módulos.
 - As imagens são referenciadas só em `index.html`, a partir de `assets/img/`.
@@ -43,6 +47,14 @@ planner-academico/
 ## Salvamento
 
 Cada alteração é gravada no navegador (`localStorage`). Quando o site roda numa página com a capacidade de banco de dados e de usuário, uma cópia também vai para a conta de quem está logado, e a versão mais recente vence.
+
+Fora de uma página com conta (por exemplo, no GitHub Pages), os dados existem só neste navegador. Se os dados do navegador forem apagados, eles se perdem. Por isso a página tem a seção **Backup dos seus dados**: **Baixar backup** gera um arquivo `.json` e **Restaurar de um arquivo** lê esse arquivo de volta (com confirmação e "Desfazer"). Se o navegador não conseguir salvar, a linha de status avisa. Dados ilegíveis nunca são apagados: uma cópia fica guardada e pode ser baixada na mesma seção.
+
+Todo dado que entra (do navegador, da conta ou de um arquivo importado) passa por `validate.js`, que descarta o que não serve e corrige o que dá para corrigir.
+
+## Testes
+
+Rode `npm test` na pasta do projeto (precisa só do Node 20 ou mais novo). Os testes ficam em `tests/` e cobrem a validação de dados e a leitura de backup.
 
 ## Regras para manter a organização
 

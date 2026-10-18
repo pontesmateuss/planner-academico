@@ -6,6 +6,7 @@ import { state, ui } from './state.js';
 import { persist } from './storage.js';
 import { renderAll, renderFilters, renderList } from './render.js';
 import { toast } from './toast.js';
+import { bindBackup } from './backup.js';
 
 function findItem(id) {
   return state.items.find((i) => i.id === id);
@@ -144,4 +145,6 @@ export function bindEvents() {
     renderAll();
     toast('Exemplos removidos.', () => { state.items = before; persist(); renderAll(); });
   });
+
+  bindBackup();
 }
