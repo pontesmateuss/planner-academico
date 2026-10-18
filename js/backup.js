@@ -111,7 +111,8 @@ function build() {
   const corrupt = getCorruptRaw();
   if (corrupt) {
     sec.appendChild(el('p', 'notes',
-      'Encontramos dados antigos que não deu para ler. Uma cópia foi guardada e pode ser baixada abaixo.'));
+      'Encontramos dados que não deu para ler (ou que vieram de uma versão mais nova do app). ' +
+      'Uma cópia foi guardada e pode ser baixada abaixo.'));
     acts.appendChild(button('Baixar dados ilegíveis', () => {
       download('planner-dados-ilegiveis.txt', corrupt, 'text/plain');
     }));

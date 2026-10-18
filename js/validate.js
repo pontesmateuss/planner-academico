@@ -13,6 +13,40 @@ export const LIMITS = {
 
 const PRIOS = ['alta', 'normal', 'baixa'];
 
+/** Versão atual do formato dos dados salvos. Suba este número a cada mudança no formato
+    e crie a migração correspondente em MIGRATIONS (veja "Versão dos dados" no README). */
+export const DATA_VERSION = 1;
+
+/* MIGRATIONS[n] converte dados da versão n para a versão n + 1.
+   Cada uma recebe o objeto inteiro ({ items, updatedAt, ... }) e devolve um objeto novo,
+   sem alterar o recebido. Dados sem número de versão (salvos antes desta mudança) são versão 0. */
+const MIGRATIONS = {
+  // 0 → 1: o formato passou a registrar o número da versão; os itens continuam iguais.
+  0: (d) => ({ ...d })
+};
+
+/** Leva dados de qualquer versão antiga até a atual.
+    Devolve { ok: true, data, migrated, from } ou { ok: false, reason: 'future' | 'invalid' }.
+    'future' = os dados vieram de uma versão mais nova do app: nunca devem ser reescritos por esta. */
+export function migrate(data, migrations = MIGRATIONS, target = DATA_VERSION) {
+  const d = Array.isArray(data) ? { items: data } : data;
+  if (!d || typeof d !== 'object' || !Array.isArray(d.items)) return { ok: false, reason: 'invalid' };
+  let version = d.version === undefined ? 0 : d.version;
+  if (!Number.isInteger(version) || version < 0) return { ok: false, reason: 'invalid' };
+  if (version > target) return { ok: false, reason: 'future' };
+
+  const from = version;
+  let cur = d;
+  while (version < target) {
+    const step = migrations[version];
+    if (typeof step !== 'function') return { ok: false, reason: 'invalid' };
+    try { cur = step(cur); } catch (e) { return { ok: false, reason: 'invalid' }; }
+    if (!cur || !Array.isArray(cur.items)) return { ok: false, reason: 'invalid' };
+    version++;
+  }
+  return { ok: true, data: { ...cur, version }, migrated: version !== from, from };
+}
+
 function validDate(s) {
   if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
   const [y, m, d] = s.split('-').map(Number);
@@ -76,7 +110,7 @@ export function sanitizeItems(list) {
 export function buildBackup(items, updatedAt, now = new Date()) {
   return JSON.stringify({
     app: 'planner-academico',
-    version: 1,
+    version: DATA_VERSION,
     exportedAt: now.toISOString(),
     updatedAt: updatedAt || 0,
     items
@@ -94,10 +128,16 @@ export function parseBackup(raw) {
   } catch (e) {
     return { ok: false, error: 'Este arquivo não é um backup válido (não foi possível ler o conteúdo).' };
   }
-  const list = Array.isArray(data) ? data : (data && Array.isArray(data.items) ? data.items : null);
-  if (!list) {
-    return { ok: false, error: 'Este arquivo não parece ser um backup do Planner (faltam os itens).' };
+  const m = migrate(data);
+  if (!m.ok) {
+    return {
+      ok: false,
+      error: m.reason === 'future'
+        ? 'Este backup foi feito por uma versão mais nova do Planner. Atualize a página e tente de novo.'
+        : 'Este arquivo não parece ser um backup do Planner (formato desconhecido).'
+    };
   }
+  const list = m.data.items;
   if (list.length > LIMITS.items) {
     return { ok: false, error: 'O backup tem itens demais (limite: ' + LIMITS.items + ').' };
   }
