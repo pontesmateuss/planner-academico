@@ -28,6 +28,7 @@ planner-academico/
 │   ├── actions.js        Eventos e ações do usuário
 │   └── main.js           Ponto de entrada
 ├── tests/                Testes automáticos (rodam com `npm test`, sem instalar nada)
+├── .github/workflows/    Roda os testes no GitHub a cada envio (testes.yml)
 ├── package.json          Só define `npm test` e o tipo de módulo
 └── assets/
     └── img/              logo-icone.png (cabeçalho) e logo-horizontal.png (barra de navegação)
@@ -66,7 +67,9 @@ Se o navegador ou a conta tiver dados de uma versão **mais nova** que a do site
 
 ## Testes
 
-Rode `npm test` na pasta do projeto (precisa só do Node 20 ou mais novo). Os testes ficam em `tests/` e cobrem a validação de dados, as migrações de versão, a leitura de backup e o salvamento no navegador.
+Rode `npm test` na pasta do projeto (precisa só do Node 22 ou mais novo). Os testes ficam em `tests/` e cobrem a validação de dados, as migrações de versão, a leitura de backup, o salvamento no navegador e a estrutura do projeto (imports que existem, sem ciclos, ids usados no JavaScript que existem no `index.html`, arquivos citados no HTML que existem).
+
+O GitHub roda os mesmos testes sozinho, no Node 22 e no 24, a cada envio para a `main` e em todo pull request (arquivo `.github/workflows/testes.yml`). Se algo quebrar, aparece um X vermelho no commit ou no pull request, e o botão de juntar fica com um aviso. Para ver o motivo, abra a aba **Actions** do repositório.
 
 ## Regras para manter a organização
 

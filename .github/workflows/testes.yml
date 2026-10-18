@@ -1,0 +1,35 @@
+name: Testes
+
+# Roda a cada envio para a main e em todo pull request.
+# Se algo falhar, aparece um X vermelho no commit ou no pull request.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  testes:
+    name: Testes (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      matrix:
+        node: [22, 24]
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Verificar a sintaxe dos arquivos JavaScript
+        run: |
+          for f in js/*.js tests/*.js; do
+            node --check "$f"
+          done
+
+      - name: Rodar os testes
+        run: npm test
