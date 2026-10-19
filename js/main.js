@@ -1,7 +1,7 @@
 /* Ponto de entrada. Só liga os módulos, na ordem certa; a lógica fica em cada módulo.
 
    Dependências (cada seta é um import, nunca o contrário, então não há ciclos):
-   config, utils  <-  dates  <-  state  <-  selectors, seed, storage  <-  render, toast  <-  actions  <-  main
+   config, utils, pwa  <-  validate, dates  <-  state  <-  selectors, seed, storage  <-  render, toast  <-  backup  <-  actions  <-  main
 */
 
 import { replaceData } from './state.js';
@@ -10,6 +10,7 @@ import { loadLocal, setStatus, initRemote, pull, setRemoteChangeHandler } from '
 import { renderAll, dayChanged } from './render.js';
 import { bindEvents } from './actions.js';
 import { initTheme } from './theme.js';
+import { registerServiceWorker } from './pwa.js';
 
 initTheme();
 
@@ -34,3 +35,5 @@ document.addEventListener('visibilitychange', () => {
 setInterval(() => {
   if (dayChanged()) renderAll();
 }, 60000);
+
+registerServiceWorker();
