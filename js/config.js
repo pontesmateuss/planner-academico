@@ -3,6 +3,13 @@
 export const STORAGE_KEY = 'planner-academico-v1';
 export const THEME_KEY = 'planner-academico-tema';
 export const REMOTE_DOC = 'planner';
+
+/* Conta na nuvem (Supabase). A chave abaixo é a PUBLISHABLE (pública): pode ficar no código.
+   Quem protege os dados é a regra de segurança de supabase/schema.sql.
+   NUNCA coloque aqui a chave secreta (sb_secret_...) nem a antiga service_role: um teste barra isso. */
+export const SUPABASE_URL = 'https://jqwpiigzvaobikoumqdg.supabase.co';
+export const SUPABASE_KEY = 'sb_publishable_KlIpTWTRRvRCALwlZDtGXw_BmNW4qlZ';
+export const SYNC_TABLE = 'planner_docs';
 export const SAVE_DELAY_MS = 600;
 export const TOAST_MS = 8000;
 

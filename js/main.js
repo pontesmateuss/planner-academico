@@ -1,7 +1,7 @@
 /* Ponto de entrada. Só liga os módulos, na ordem certa; a lógica fica em cada módulo.
 
    Dependências (cada seta é um import, nunca o contrário, então não há ciclos):
-   config, utils, pwa  <-  validate, dates  <-  state  <-  selectors, seed, storage  <-  render, toast  <-  backup  <-  actions  <-  main
+   config, utils, pwa  <-  validate, dates  <-  state  <-  selectors, seed, storage  <-  render, toast  <-  backup  <-  account, agenda  <-  actions  <-  main
 */
 
 import { replaceData } from './state.js';

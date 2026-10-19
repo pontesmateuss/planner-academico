@@ -8,6 +8,7 @@ import { renderAll, renderFilters, renderList } from './render.js';
 import { toast } from './toast.js';
 import { bindBackup } from './backup.js';
 import { bindAgenda } from './agenda.js';
+import { bindAccount } from './account.js';
 
 function findItem(id) {
   return state.items.find((i) => i.id === id);
@@ -149,4 +150,5 @@ export function bindEvents() {
 
   bindBackup();
   bindAgenda();
+  bindAccount();
 }
