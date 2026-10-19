@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { SUPABASE_URL, SUPABASE_KEY } from '../js/config.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const jsDir = join(root, 'js');
@@ -77,4 +78,47 @@ test('os arquivos locais citados no index.html existem', () => {
     const path = join(root, ref.split(/[?#]/)[0]);
     assert.ok(existsSync(path), 'index.html cita "' + ref + '", que não existe');
   });
+});
+
+test('config.js usa só a chave PÚBLICA do Supabase', () => {
+  assert.match(SUPABASE_URL, /^https:\/\/[a-z0-9]+\.supabase\.co$/, 'SUPABASE_URL fora do formato esperado');
+  const publishable = SUPABASE_KEY.startsWith('sb_publishable_');
+  let legacyAnon = false;
+  if (SUPABASE_KEY.startsWith('eyJ')) {
+    const payload = JSON.parse(Buffer.from(SUPABASE_KEY.split('.')[1], 'base64url').toString('utf8'));
+    legacyAnon = payload.role === 'anon';
+  }
+  assert.ok(publishable || legacyAnon, 'SUPABASE_KEY deve ser a chave publishable (sb_publishable_...) ou a antiga anon');
+});
+
+test('nenhuma chave secreta do Supabase aparece no código do site', () => {
+  const targets = ['index.html', 'sw.js', 'manifest.webmanifest', 'README.md', ...files.map((f) => 'js/' + f)];
+  targets.forEach((rel) => {
+    const text = readFileSync(join(root, rel), 'utf8');
+    assert.doesNotMatch(text, /sb_secret_[A-Za-z0-9_-]{8,}/, rel + ' contém uma chave secreta (sb_secret_...)');
+    (text.match(/eyJ[\w-]+\.[\w-]+\.[\w-]+/g) || []).forEach((jwt) => {
+      let role = null;
+      try { role = JSON.parse(Buffer.from(jwt.split('.')[1], 'base64url').toString('utf8')).role; } catch (e) { /* não é um JWT */ }
+      assert.notEqual(role, 'service_role', rel + ' contém a chave service_role, que ignora toda a proteção do banco');
+    });
+  });
+});
+
+test('index.html carrega a biblioteca do Supabase antes de js/main.js', () => {
+  const lib = html.indexOf('vendor/supabase-js-');
+  const main = html.indexOf('js/main.js');
+  assert.ok(lib > -1, 'index.html não carrega a biblioteca em vendor/');
+  assert.ok(lib < main, 'a biblioteca precisa vir antes de js/main.js');
+  assert.match(html.slice(lib - 30, lib), /<script defer src="$/, 'a biblioteca deve ser um <script defer> (não trava a página)');
+});
+
+test('supabase/schema.sql liga a RLS e protege as quatro operações da própria linha', () => {
+  const sql = readFileSync(join(root, 'supabase', 'schema.sql'), 'utf8');
+  assert.match(sql, /enable row level security/i);
+  assert.match(sql, /revoke all on public\.planner_docs from anon/i);
+  ['select', 'insert', 'update', 'delete'].forEach((op) => {
+    assert.match(sql, new RegExp('for ' + op + ' to authenticated', 'i'), 'falta a política de ' + op);
+  });
+  assert.doesNotMatch(sql, /to anon|to public|using\s*\(\s*true\s*\)/i, 'nenhuma política pode abrir para anônimos ou usar "true"');
+  assert.match(sql, /auth\.uid\(\)\) = user_id/);
 });
