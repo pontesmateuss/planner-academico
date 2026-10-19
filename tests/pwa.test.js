@@ -46,7 +46,7 @@ test('PRECACHE: não tem itens repetidos', () => {
 });
 
 test('PRECACHE: lista todos os arquivos do site (senão ele não abre offline)', () => {
-  const expected = ['index.html', 'manifest.webmanifest', ...listFiles('js'), ...listFiles('css'), ...listFiles('assets/img')];
+  const expected = ['index.html', 'manifest.webmanifest', ...listFiles('js'), ...listFiles('vendor').filter((f) => f.endsWith('.js')), ...listFiles('css'), ...listFiles('assets/img')];
   expected.forEach((p) => {
     assert.ok(precache.includes(p), 'sw.js não lista "' + p + '": atualize PRECACHE e some 1 a CACHE_VERSION');
   });

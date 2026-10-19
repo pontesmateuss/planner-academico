@@ -8,7 +8,7 @@
    Ao criar, renomear ou apagar um arquivo do site, atualize PRECACHE e some 1 a CACHE_VERSION.
    O teste tests/estrutura.test.js avisa se a lista ficar diferente dos arquivos que existem. */
 
-const CACHE_VERSION = 2;
+const CACHE_VERSION = 3;
 const CACHE = 'planner-academico-v' + CACHE_VERSION;
 const FONT_CACHE = 'planner-academico-fontes';
 
@@ -22,12 +22,14 @@ const PRECACHE = [
   'css/components.css',
   'js/main.js',
   'js/actions.js',
+  'js/account.js',
   'js/agenda.js',
   'js/backup.js',
   'js/config.js',
   'js/dates.js',
   'js/ics.js',
   'js/pwa.js',
+  'js/remote.js',
   'js/reminders.js',
   'js/render.js',
   'js/seed.js',
@@ -38,6 +40,7 @@ const PRECACHE = [
   'js/toast.js',
   'js/utils.js',
   'js/validate.js',
+  'vendor/supabase-js-2.118.0.umd.js',
   'assets/img/logo-horizontal.png',
   'assets/img/logo-icone.png',
   'assets/img/icon-192.png',

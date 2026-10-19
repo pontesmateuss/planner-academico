@@ -5,13 +5,14 @@ import { STORAGE_KEY } from './config.js';
 import { $, el, download } from './utils.js';
 import { today, isoDay } from './dates.js';
 import { state, ui, replaceData } from './state.js';
-import { persist, getCorruptRaw } from './storage.js';
+import { persist, getCorruptRaw, getBeforeSyncRaw } from './storage.js';
 import { renderAll } from './render.js';
 import { toast } from './toast.js';
 import { buildBackup, parseBackup, LIMITS } from './validate.js';
 
 const LAST_KEY = STORAGE_KEY + ':ultimo-backup';
 let info = null;
+let extras = null;
 
 function readLast() {
   try { return localStorage.getItem(LAST_KEY); } catch (e) { return null; }
@@ -97,18 +98,44 @@ function build() {
   acts.appendChild(button('Restaurar de um arquivo', () => input.click()));
   acts.appendChild(input);
 
+  sec.appendChild(acts);
+
+  extras = el('div', 'group');
+  sec.appendChild(extras);
+  refreshBackupExtras();
+
+  $('lista').insertAdjacentElement('afterend', sec);
+}
+
+/** Mostra os botões das cópias guardadas: dados ilegíveis e dados substituídos por uma sincronização.
+    Chamada ao montar a seção e depois de cada login (account.js). */
+export function refreshBackupExtras() {
+  if (!extras) return;
+  extras.replaceChildren();
+
   const corrupt = getCorruptRaw();
   if (corrupt) {
-    sec.appendChild(el('p', 'notes',
+    extras.appendChild(el('p', 'notes',
       'Encontramos dados que não deu para ler (ou que vieram de uma versão mais nova do app). ' +
       'Uma cópia foi guardada e pode ser baixada abaixo.'));
+    const acts = el('div', 'acts');
     acts.appendChild(button('Baixar dados ilegíveis', () => {
       download('planner-dados-ilegiveis.txt', corrupt, 'text/plain');
     }));
+    extras.appendChild(acts);
   }
-  sec.appendChild(acts);
 
-  $('lista').insertAdjacentElement('afterend', sec);
+  const before = getBeforeSyncRaw();
+  if (before) {
+    extras.appendChild(el('p', 'notes',
+      'Na última sincronização, itens de um dos lados (este aparelho ou a conta) foram substituídos pelos mais recentes. ' +
+      'Uma cópia deles ficou guardada: baixe e use "Restaurar de um arquivo" se faltar algo.'));
+    const acts = el('div', 'acts');
+    acts.appendChild(button('Baixar cópia de antes da sincronização', () => {
+      download('planner-antes-da-sincronizacao.json', before, 'application/json');
+    }));
+    extras.appendChild(acts);
+  }
 }
 
 /** Liga a seção de backup. Chamada uma única vez, em actions.js. */

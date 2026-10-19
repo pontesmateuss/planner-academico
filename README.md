@@ -22,7 +22,8 @@ planner-academico/
 │   ├── state.js          Estado compartilhado (dados e tela)
 │   ├── selectors.js      Filtro por matéria e contagens
 │   ├── seed.js           Itens de exemplo da primeira abertura
-│   ├── storage.js        Salvar no navegador e na conta
+│   ├── storage.js        Salvar no navegador e na conta (sincronização)
+│   ├── remote.js         Linha da conta no Supabase, mensagens de erro de login (funções puras)
 │   ├── render.js         Desenho da tela
 │   ├── toast.js          Aviso com "Desfazer"
 │   ├── theme.js          Tema claro e escuro
@@ -31,10 +32,13 @@ planner-academico/
 │   ├── backup.js         Baixar e restaurar backup (monta a própria seção na página)
 │   ├── agenda.js         Exportar prazos para a agenda e ativar avisos (monta a própria seção na página)
 │   ├── pwa.js            Registra o service worker
+│   ├── account.js        Tela de login e conta (monta a própria seção na página)
 │   ├── actions.js        Eventos e ações do usuário
 │   └── main.js           Ponto de entrada
 ├── tests/                Testes automáticos (rodam com `npm test`, sem instalar nada)
 ├── .github/workflows/    Roda os testes no GitHub a cada envio (testes.yml)
+├── vendor/               Biblioteca do Supabase (supabase-js, licença MIT) guardada aqui, sem CDN
+├── supabase/schema.sql   Tabela e regras de segurança da conta (colar no painel do Supabase)
 ├── package.json          Só define `npm test` e o tipo de módulo
 └── assets/
     └── img/              logo-icone.png (cabeçalho), logo-horizontal.png (barra de navegação) e os ícones do app (icon-*.png, apple-touch-icon.png)
@@ -53,11 +57,30 @@ planner-academico/
 
 ## Salvamento
 
-Cada alteração é gravada no navegador (`localStorage`). Quando o site roda numa página com a capacidade de banco de dados e de usuário, uma cópia também vai para a conta de quem está logado, e a versão mais recente vence.
+Cada alteração é gravada no navegador (`localStorage`). Com uma conta ligada (veja **Conta e sincronização**, abaixo), uma cópia também vai para a conta, e a versão mais recente vence.
 
-Fora de uma página com conta (por exemplo, no GitHub Pages), os dados existem só neste navegador. Se os dados do navegador forem apagados, eles se perdem. Por isso a página tem a seção **Backup dos seus dados**: **Baixar backup** gera um arquivo `.json` e **Restaurar de um arquivo** lê esse arquivo de volta (com confirmação e "Desfazer"). Se o navegador não conseguir salvar, a linha de status avisa. Dados ilegíveis nunca são apagados: uma cópia fica guardada e pode ser baixada na mesma seção.
+Sem conta, os dados existem só neste navegador. Se os dados do navegador forem apagados, eles se perdem. Por isso a página tem a seção **Backup dos seus dados**: **Baixar backup** gera um arquivo `.json` e **Restaurar de um arquivo** lê esse arquivo de volta (com confirmação e "Desfazer"). Se o navegador não conseguir salvar, a linha de status avisa. Dados ilegíveis nunca são apagados: uma cópia fica guardada e pode ser baixada na mesma seção.
 
 Todo dado que entra (do navegador, da conta ou de um arquivo importado) passa por `validate.js`, que descarta o que não serve e corrige o que dá para corrigir.
+
+## Conta e sincronização
+
+A seção **Conta e sincronização** (logo abaixo da lista) deixa entrar com e-mail e senha para ver os mesmos itens em vários aparelhos. Sem conta, tudo continua funcionando e salvo no navegador. A conta fica no [Supabase](https://supabase.com) (plano gratuito); a biblioteca (`vendor/supabase-js-*.umd.js`, licença MIT) fica guardada no repositório, então o site não depende de CDN e continua abrindo offline.
+
+**Como funciona.** Cada conta tem **um documento** na tabela `planner_docs` (os mesmos dados do `localStorage`: `version`, `items`, `updatedAt`). Ao entrar, e sempre que a aba volta a ficar visível, `storage.js` compara a conta com o aparelho e **vale o mais recente**. Cada alteração é enviada depois de 0,6 s. Sair da conta mantém os itens no aparelho e para de enviar.
+
+**Segurança.** `js/config.js` tem a URL do projeto e a chave **publishable**, que é pública por desenho e pode ficar no código. Quem protege os dados são as regras do banco (RLS) em `supabase/schema.sql`: cada conta só lê e altera a própria linha. A chave **secreta** (`sb_secret_...`) ou a antiga `service_role` ignoram essas regras e **nunca** podem entrar no repositório; um teste (`tests/estrutura.test.js`) falha se aparecerem.
+
+**Limite importante.** A sincronização compara o documento inteiro, não item por item. Se você editar em dois aparelhos ao mesmo tempo, sem a aba voltar a ficar visível entre as edições, o mais recente sobrescreve o outro. Para não perder nada, o lado que foi substituído (se tinha itens de verdade) é guardado e aparece na seção **Backup** como **Baixar cópia de antes da sincronização**, em formato que **Restaurar de um arquivo** entende.
+
+**Configurar do zero (uma vez):**
+
+1. Crie um projeto gratuito em supabase.com. Em **Authentication → Providers → Email**, desligue **Confirm email** (o e-mail embutido do plano gratuito só envia para a equipe do projeto e tem limite baixo).
+2. No **SQL Editor**, cole o conteúdo de `supabase/schema.sql` e execute. Pode rodar de novo sem apagar dados.
+3. Em **Connect**, copie a **Project URL** e a **publishable key** para `SUPABASE_URL` e `SUPABASE_KEY` em `js/config.js`.
+4. Abra o site, **Criar conta**. Depois de criar a sua, em **Authentication** desligue **Allow new users to sign up** para fechar novos cadastros.
+
+Projetos gratuitos com pouca atividade por 7 dias são pausados (os dados ficam guardados; retome em **Resume project** no painel).
 
 ## Versão dos dados
 
@@ -87,11 +110,11 @@ O site é um PWA. No Android (Chrome) e no computador (Chrome ou Edge), abra o m
 
 O service worker (`sw.js`) guarda uma cópia dos arquivos do site. Com internet, o site sempre busca a versão mais nova. Sem internet, abre a cópia guardada, e os seus itens continuam disponíveis porque ficam salvos no próprio aparelho. Só funciona em `https` (como no GitHub Pages) ou em `localhost`; abrindo o `index.html` direto do disco, o site funciona normal, só não instala nem abre offline.
 
-Ao criar, renomear ou apagar um arquivo do site (um módulo novo em `js/`, por exemplo), atualize a lista `PRECACHE` em `sw.js` e some 1 a `CACHE_VERSION`. Se esquecer, o teste avisa. Os ícones foram gerados a partir de `logo-icone.png`; para um ícone mais nítido em telas grandes, troque `icon-512.png` e `icon-maskable-512.png` por versões feitas a partir de um logo de pelo menos 512 px.
+Ao criar, renomear ou apagar um arquivo do site (um módulo novo em `js/`, por exemplo, ou um arquivo em `vendor/`), atualize a lista `PRECACHE` em `sw.js` e some 1 a `CACHE_VERSION`. Se esquecer, o teste avisa. Os ícones foram gerados a partir de `logo-icone.png`; para um ícone mais nítido em telas grandes, troque `icon-512.png` e `icon-maskable-512.png` por versões feitas a partir de um logo de pelo menos 512 px.
 
 ## Testes
 
-Rode `npm test` na pasta do projeto (precisa só do Node 22 ou mais novo). Os testes ficam em `tests/` e cobrem a validação de dados, as migrações de versão, a leitura de backup, o salvamento no navegador, a exportação para a agenda (`.ics`), os avisos de prazo, o PWA (lista de arquivos do service worker, manifest, ícones e o comportamento do service worker com e sem internet) e a estrutura do projeto (imports que existem, sem ciclos, ids usados no JavaScript que existem no `index.html`, arquivos citados no HTML que existem).
+Rode `npm test` na pasta do projeto (precisa só do Node 22 ou mais novo). Os testes ficam em `tests/` e cobrem a validação de dados, as migrações de versão, a leitura de backup, o salvamento no navegador, a sincronização com a conta (com um servidor simulado) e as mensagens de login, a exportação para a agenda (`.ics`), os avisos de prazo, o PWA (lista de arquivos do service worker, manifest, ícones e o comportamento do service worker com e sem internet) e a estrutura do projeto (a chave secreta do Supabase nunca no código, o SQL protegendo a conta, imports que existem, sem ciclos, ids usados no JavaScript que existem no `index.html`, arquivos citados no HTML que existem).
 
 O GitHub roda os mesmos testes sozinho, no Node 22 e no 24, a cada envio para a `main` e em todo pull request (arquivo `.github/workflows/testes.yml`). Se algo quebrar, aparece um X vermelho no commit ou no pull request, e o botão de juntar fica com um aviso. Para ver o motivo, abra a aba **Actions** do repositório.
 
