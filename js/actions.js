@@ -148,7 +148,8 @@ export function bindEvents() {
     toast('Exemplos removidos.', () => { state.items = before; persist(); renderAll(); });
   });
 
-  bindBackup();
-  bindAgenda();
+  // A ordem aqui é a ordem dos painéis na página.
   bindAccount();
+  bindAgenda();
+  bindBackup();
 }

@@ -1,9 +1,9 @@
 /* Agenda e lembretes: exportar os prazos para a agenda (.ics) e ativar avisos de prazo neste aparelho.
-   Monta a própria seção na página (logo abaixo da lista), então não precisa mexer no index.html.
+   Monta o próprio painel dentro de #ferramentas (index.html).
    A lógica de quais avisos mostrar fica em reminders.js; aqui ficam a tela, a permissão e a notificação. */
 
 import { STORAGE_KEY } from './config.js';
-import { $, el, download } from './utils.js';
+import { $, download, addPanel, actionButton, panelRow } from './utils.js';
 import { today, isoDay } from './dates.js';
 import { state } from './state.js';
 import { toast } from './toast.js';
@@ -117,45 +117,32 @@ async function toggleAvisos() {
 
 /* ---------- tela ---------- */
 
-function button(label, onClick) {
-  const b = el('button', 'btn small', label);
-  b.type = 'button';
-  b.addEventListener('click', onClick);
-  return b;
-}
-
 function build() {
-  const sec = el('section', 'group');
-  sec.id = 'agenda';
-  sec.appendChild(el('h3', '', 'Agenda e lembretes'));
+  const { sec } = addPanel('agenda', 'Agenda e lembretes', 'Duas formas de não esquecer um prazo.');
 
-  sec.appendChild(el('p', 'notes',
-    'Leve seus prazos pendentes para o Google Agenda, o Calendário da Apple ou o Outlook. ' +
-    'Cada prazo vira um evento com lembretes: na véspera e no dia, às 9h (se tiver horário: 1 dia e 1 hora antes).'));
-  sec.appendChild(el('p', 'notes',
-    'Ao exportar de novo, a agenda costuma reconhecer os mesmos eventos e atualizar, em vez de duplicar. ' +
-    'Itens concluídos ou apagados depois de exportados continuam na agenda até você removê-los por lá.'));
-  const exportActs = el('div', 'acts');
-  exportActs.appendChild(button('Exportar prazos para a agenda (.ics)', exportAgenda));
-  sec.appendChild(exportActs);
+  const exp = panelRow(
+    'Levar para a agenda do celular',
+    'Cada prazo pendente vira um evento, com lembrete na véspera e no dia (às 9h). ' +
+    'Funciona no Google Agenda, no Calendário da Apple e no Outlook, mesmo com o Planner fechado.',
+    'Exportou de novo? A agenda atualiza os mesmos eventos. Itens concluídos ou apagados continuam lá até você removê-los.');
+  exp.actions.appendChild(actionButton('Exportar para a agenda', exportAgenda));
+  sec.appendChild(exp.row);
 
-  statusEl = el('p', 'notes', '');
+  const avisos = panelRow(
+    'Avisos neste aparelho',
+    '',
+    'Os avisos só aparecem com o Planner aberto (numa aba ou como app instalado). ' +
+    'Para lembrete com o site fechado, use a agenda.');
+  statusEl = avisos.desc;
   statusEl.setAttribute('role', 'status');
-  sec.appendChild(statusEl);
-  sec.appendChild(el('p', 'notes',
-    'Os avisos só aparecem enquanto o Planner está aberto (numa aba ou como app instalado); no celular, o sistema pode ' +
-    'pausá-lo em segundo plano. Para lembretes que tocam com o site fechado, use a exportação para a agenda.'));
-  const avisoActs = el('div', 'acts');
-  toggleBtn = button('', toggleAvisos);
-  avisoActs.appendChild(toggleBtn);
-  sec.appendChild(avisoActs);
-
-  $('lista').insertAdjacentElement('afterend', sec);
+  toggleBtn = actionButton('', toggleAvisos);
+  avisos.actions.appendChild(toggleBtn);
+  sec.appendChild(avisos.row);
 }
 
 /** Liga a seção de agenda e os avisos. Chamada uma única vez, em actions.js. */
 export function bindAgenda() {
-  if (!$('lista')) return;
+  if (!$('ferramentas')) return;
   loadPrefs();
   build();
   refreshAvisos();
