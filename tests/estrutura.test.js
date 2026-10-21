@@ -122,3 +122,22 @@ test('supabase/schema.sql liga a RLS e protege as quatro operações da própria
   assert.doesNotMatch(sql, /to anon|to public|using\s*\(\s*true\s*\)/i, 'nenhuma política pode abrir para anônimos ou usar "true"');
   assert.match(sql, /auth\.uid\(\)\) = user_id/);
 });
+
+test('toda classe usada pelos painéis (conta, agenda, backup) tem CSS', () => {
+  const css = readdirSync(join(root, 'css')).filter((f) => f.endsWith('.css'))
+    .map((f) => readFileSync(join(root, 'css', f), 'utf8')).join('\n');
+  const used = new Set();
+  ['utils.js', 'account.js', 'agenda.js', 'backup.js'].forEach((f) => {
+    matches(source[f], /\bel\(\s*'[a-z0-9]+'\s*,\s*'([^']+)'/g).forEach((c) => c.split(/\s+/).forEach((x) => used.add(x)));
+    matches(source[f], /className\s*=\s*'([^']+)'/g).forEach((c) => c.split(/\s+/).forEach((x) => used.add(x)));
+  });
+  ['panel', 'panel-row', 'panel-actions', 'row-text', 'row-title', 'row-desc', 'hint'].forEach((c) => used.add(c));
+  assert.ok(used.size > 8, 'o teste não achou classes: está quebrado?');
+  used.forEach((c) => {
+    assert.ok(new RegExp('\\.' + c.replace(/-/g, '\\-') + '(?![\\w-])').test(css), 'o JavaScript usa a classe "' + c + '", mas ela não existe em css/*.css');
+  });
+});
+
+test('index.html tem o #ferramentas onde os painéis são montados', () => {
+  assert.match(html, /<div class="panels" id="ferramentas"><\/div>/);
+});

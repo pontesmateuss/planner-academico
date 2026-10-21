@@ -16,7 +16,7 @@ planner-academico/
 │   └── components.css    Cartão, formulário, botões, filtros, lista, aviso
 ├── js/                   Comportamento (JavaScript, módulos ES)
 │   ├── config.js         Constantes e textos
-│   ├── utils.js          $, el, uid
+│   ├── utils.js          $, el, uid, download e os blocos dos painéis (addPanel, panelRow, actionButton)
 │   ├── validate.js       Validação e limpeza dos dados, leitura de backup (funções puras)
 │   ├── dates.js          Datas e prazos (funções puras)
 │   ├── state.js          Estado compartilhado (dados e tela)
@@ -29,10 +29,10 @@ planner-academico/
 │   ├── theme.js          Tema claro e escuro
 │   ├── ics.js            Monta o arquivo de agenda .ics (funções puras)
 │   ├── reminders.js      Decide quais avisos de prazo mostrar (funções puras)
-│   ├── backup.js         Baixar e restaurar backup (monta a própria seção na página)
-│   ├── agenda.js         Exportar prazos para a agenda e ativar avisos (monta a própria seção na página)
+│   ├── backup.js         Baixar e restaurar backup (monta o próprio painel em #ferramentas)
+│   ├── agenda.js         Exportar prazos para a agenda e ativar avisos (monta o próprio painel em #ferramentas)
 │   ├── pwa.js            Registra o service worker
-│   ├── account.js        Tela de login e conta (monta a própria seção na página)
+│   ├── account.js        Tela de login e conta (monta o próprio painel em #ferramentas)
 │   ├── actions.js        Eventos e ações do usuário
 │   └── main.js           Ponto de entrada
 ├── tests/                Testes automáticos (rodam com `npm test`, sem instalar nada)
@@ -52,7 +52,7 @@ planner-academico/
 
   `config, utils, pwa` → `validate, dates` → `state` → `selectors, seed, storage, ics, reminders` → `render, toast` → `backup, agenda` → `actions` → `main`
 
-- O que o JavaScript procura no HTML são os `id` (por exemplo `form`, `lista`, `filtros`, `status`, `toast`, `tema`). Se renomear um `id` no `index.html`, troque também nos módulos.
+- O que o JavaScript procura no HTML são os `id` (por exemplo `form`, `lista`, `filtros`, `status`, `toast`, `tema`, `ferramentas`). Se renomear um `id` no `index.html`, troque também nos módulos.
 - As imagens são referenciadas só em `index.html`, a partir de `assets/img/`.
 
 ## Salvamento
@@ -65,7 +65,7 @@ Todo dado que entra (do navegador, da conta ou de um arquivo importado) passa po
 
 ## Conta e sincronização
 
-A seção **Conta e sincronização** (logo abaixo da lista) deixa entrar com e-mail e senha para ver os mesmos itens em vários aparelhos. Sem conta, tudo continua funcionando e salvo no navegador. A conta fica no [Supabase](https://supabase.com) (plano gratuito); a biblioteca (`vendor/supabase-js-*.umd.js`, licença MIT) fica guardada no repositório, então o site não depende de CDN e continua abrindo offline.
+O painel **Conta e sincronização** (no fim da página, em **Conta, agenda e backup**) deixa entrar com e-mail e senha para ver os mesmos itens em vários aparelhos. Sem conta, tudo continua funcionando e salvo no navegador. A conta fica no [Supabase](https://supabase.com) (plano gratuito); a biblioteca (`vendor/supabase-js-*.umd.js`, licença MIT) fica guardada no repositório, então o site não depende de CDN e continua abrindo offline.
 
 **Como funciona.** Cada conta tem **um documento** na tabela `planner_docs` (os mesmos dados do `localStorage`: `version`, `items`, `updatedAt`). Ao entrar, e sempre que a aba volta a ficar visível, `storage.js` compara a conta com o aparelho e **vale o mais recente**. Cada alteração é enviada depois de 0,6 s. Sair da conta mantém os itens no aparelho e para de enviar.
 
@@ -122,4 +122,5 @@ O GitHub roda os mesmos testes sozinho, no Node 22 e no 24, a cada envio para a 
 
 - HTML só estrutura, CSS só aparência, JavaScript só comportamento. Nada de `style` ou `onclick` dentro do HTML (o único `style` que sobrou é o espaçamento do formulário, que pode migrar para `components.css`).
 - Cor, tamanho de letra e espaçamento novos entram primeiro como variável em `tokens.css`.
+- Conta, agenda e backup são painéis (cartões) dentro de `#ferramentas`. Para criar um painel novo, use `addPanel` e `panelRow` de `utils.js`: o visual (cartão, texto à esquerda, botões à direita, botões dividindo a largura no celular) já vem das classes `panel*` em `components.css`.
 - Um módulo novo só importa módulos que estão à esquerda dele na cadeia acima.
