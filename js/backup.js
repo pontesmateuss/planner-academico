@@ -1,8 +1,8 @@
 /* Backup: baixar os dados em um arquivo .json e restaurar a partir dele.
-   Monta a própria seção na página (logo abaixo da lista), então não precisa mexer no index.html. */
+   Monta o próprio painel dentro de #ferramentas (index.html). */
 
 import { STORAGE_KEY } from './config.js';
-import { $, el, download } from './utils.js';
+import { $, el, download, addPanel, actionButton } from './utils.js';
 import { today, isoDay } from './dates.js';
 import { state, ui, replaceData } from './state.js';
 import { persist, getCorruptRaw, getBeforeSyncRaw } from './storage.js';
@@ -65,22 +65,9 @@ async function importFile(file) {
   });
 }
 
-function button(label, onClick) {
-  const b = el('button', 'btn small', label);
-  b.type = 'button';
-  b.addEventListener('click', onClick);
-  return b;
-}
-
 function build() {
-  const sec = el('section', 'group');
-  sec.id = 'backup';
-  sec.appendChild(el('h3', '', 'Backup dos seus dados'));
-  sec.appendChild(el('p', 'notes',
-    'Guarde uma cópia dos seus itens em um arquivo no seu aparelho. ' +
-    'Se os dados do navegador forem apagados, você restaura por aqui.'));
-  info = el('p', 'notes', '');
-  sec.appendChild(info);
+  const { sec } = addPanel('backup', 'Backup dos seus dados',
+    'Guarde uma cópia dos seus itens em um arquivo. Se o navegador apagar os dados, você restaura por aqui.');
 
   const input = document.createElement('input');
   input.type = 'file';
@@ -93,18 +80,28 @@ function build() {
     importFile(file);
   });
 
-  const acts = el('div', 'acts');
-  acts.appendChild(button('Baixar backup', exportData));
-  acts.appendChild(button('Restaurar de um arquivo', () => input.click()));
+  const acts = el('div', 'panel-actions');
+  acts.appendChild(actionButton('Baixar backup', exportData, true));
+  acts.appendChild(actionButton('Restaurar de um arquivo', () => input.click()));
   acts.appendChild(input);
-
   sec.appendChild(acts);
 
-  extras = el('div', 'group');
+  info = el('p', 'hint', '');
+  sec.appendChild(info);
+
+  extras = el('div', 'panel-extras');
   sec.appendChild(extras);
   refreshBackupExtras();
+}
 
-  $('lista').insertAdjacentElement('afterend', sec);
+/** Aviso com um botão (cópias guardadas). */
+function alertBox(text, label, onClick) {
+  const box = el('div', 'panel-alert');
+  box.appendChild(el('p', '', text));
+  const acts = el('div', 'panel-actions');
+  acts.appendChild(actionButton(label, onClick));
+  box.appendChild(acts);
+  return box;
 }
 
 /** Mostra os botões das cópias guardadas: dados ilegíveis e dados substituídos por uma sincronização.
@@ -115,32 +112,26 @@ export function refreshBackupExtras() {
 
   const corrupt = getCorruptRaw();
   if (corrupt) {
-    extras.appendChild(el('p', 'notes',
+    extras.appendChild(alertBox(
       'Encontramos dados que não deu para ler (ou que vieram de uma versão mais nova do app). ' +
-      'Uma cópia foi guardada e pode ser baixada abaixo.'));
-    const acts = el('div', 'acts');
-    acts.appendChild(button('Baixar dados ilegíveis', () => {
-      download('planner-dados-ilegiveis.txt', corrupt, 'text/plain');
-    }));
-    extras.appendChild(acts);
+      'Uma cópia foi guardada e pode ser baixada.',
+      'Baixar dados ilegíveis',
+      () => { download('planner-dados-ilegiveis.txt', corrupt, 'text/plain'); }));
   }
 
   const before = getBeforeSyncRaw();
   if (before) {
-    extras.appendChild(el('p', 'notes',
+    extras.appendChild(alertBox(
       'Na última sincronização, itens de um dos lados (este aparelho ou a conta) foram substituídos pelos mais recentes. ' +
-      'Uma cópia deles ficou guardada: baixe e use "Restaurar de um arquivo" se faltar algo.'));
-    const acts = el('div', 'acts');
-    acts.appendChild(button('Baixar cópia de antes da sincronização', () => {
-      download('planner-antes-da-sincronizacao.json', before, 'application/json');
-    }));
-    extras.appendChild(acts);
+      'Uma cópia deles ficou guardada: baixe e use "Restaurar de um arquivo" se faltar algo.',
+      'Baixar cópia de antes da sincronização',
+      () => { download('planner-antes-da-sincronizacao.json', before, 'application/json'); }));
   }
 }
 
 /** Liga a seção de backup. Chamada uma única vez, em actions.js. */
 export function bindBackup() {
-  if (!$('lista')) return;
+  if (!$('ferramentas')) return;
   build();
   refreshInfo();
   try {

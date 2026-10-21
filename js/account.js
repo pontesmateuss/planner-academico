@@ -1,11 +1,11 @@
 /* Conta e sincronização: login com e-mail e senha (Supabase) e salvamento dos itens na conta.
-   Monta a própria seção na página (logo abaixo da lista), então não precisa mexer no index.html.
+   Monta o próprio painel dentro de #ferramentas (index.html).
    A biblioteca do Supabase vem de vendor/ (arquivo guardado no repositório, carregado por <script> no index.html)
    e aparece como window.supabase. Se ela não carregar, o site segue só com o navegador.
    Os itens são enviados por storage.js (connectRemote); a tradução de erros e a regra da linha na tabela ficam em remote.js. */
 
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
-import { $, el } from './utils.js';
+import { $, el, addPanel, actionButton, panelRow } from './utils.js';
 import { toast } from './toast.js';
 import { connectRemote, disconnectRemote } from './storage.js';
 import { refreshBackupExtras } from './backup.js';
@@ -30,10 +30,10 @@ function setBusy(value) {
 /** Alterna entre o formulário (sem login) e o resumo da conta (com login). */
 function showView(session) {
   const email = session && session.user ? session.user.email : '';
-  parts.intro.hidden = !!session;
+  parts.lead.hidden = !!session;
   parts.form.hidden = !!session;
   parts.who.hidden = !session;
-  if (session) parts.whoText.textContent = 'Conectado como ' + email + '. Seus itens são salvos na conta e aparecem nos seus outros aparelhos.';
+  if (session) parts.whoTitle.textContent = 'Conectado como ' + email;
 }
 
 function resultMessage(r) {
@@ -115,13 +115,6 @@ async function signOut() {
 
 /* ---------- tela ---------- */
 
-function button(label, onClick, cls) {
-  const b = el('button', cls || 'btn small', label);
-  b.type = 'button';
-  b.addEventListener('click', onClick);
-  return b;
-}
-
 function field(id, label, type, autocomplete) {
   const box = el('div', 'field');
   const lab = el('label', '', label);
@@ -136,35 +129,37 @@ function field(id, label, type, autocomplete) {
 }
 
 function build() {
-  const sec = el('section', 'group');
-  sec.id = 'conta';
-  sec.appendChild(el('h3', '', 'Conta e sincronização'));
+  const panel = addPanel('conta', 'Conta e sincronização',
+    'Entre para ver os mesmos itens no celular e no computador. Sem conta, tudo continua funcionando e fica salvo só neste aparelho.');
+  const sec = panel.sec;
+  parts.lead = panel.lead;
 
-  parts.intro = el('p', 'notes',
-    'Entre com seu e-mail e uma senha para ver os mesmos itens no celular e no computador. ' +
-    'Use uma senha só para o Planner (não a do seu e-mail). Sem conta, tudo continua funcionando e salvo neste aparelho.');
-  sec.appendChild(parts.intro);
-
+  // Formulário (sem login): e-mail e senha lado a lado, botões embaixo.
   parts.form = document.createElement('form');
   parts.form.noValidate = true;
   parts.form.setAttribute('aria-label', 'Entrar ou criar conta');
   const mail = field('conta-email', 'E-mail', 'email', 'username');
-  const pass = field('conta-senha', 'Senha (mínimo ' + PASSWORD_MIN + ' caracteres para criar a conta)', 'password', 'current-password');
+  const pass = field('conta-senha', 'Senha', 'password', 'current-password');
   parts.email = mail.input;
   parts.password = pass.input;
-  parts.form.appendChild(mail.box);
-  parts.form.appendChild(pass.box);
+  const fields = el('div', 'panel-fields');
+  fields.appendChild(mail.box);
+  fields.appendChild(pass.box);
+  parts.form.appendChild(fields);
 
-  const acts = el('div', 'acts');
-  parts.signIn = el('button', 'btn small primary', 'Entrar');
+  const acts = el('div', 'panel-actions');
+  parts.signIn = actionButton('Entrar', null, true);
   parts.signIn.type = 'submit';
-  parts.signUp = button('Criar conta', () => {
+  parts.signUp = actionButton('Criar conta', () => {
     parts.password.setAttribute('autocomplete', 'new-password');
     run('signup');
   });
   acts.appendChild(parts.signIn);
   acts.appendChild(parts.signUp);
   parts.form.appendChild(acts);
+  parts.form.appendChild(el('p', 'hint',
+    'Primeira vez aqui? Preencha e escolha "Criar conta". Use uma senha de pelo menos ' + PASSWORD_MIN +
+    ' caracteres, só para o Planner (não a do seu e-mail).'));
   parts.form.addEventListener('submit', (e) => {
     e.preventDefault();
     parts.password.setAttribute('autocomplete', 'current-password');
@@ -172,27 +167,24 @@ function build() {
   });
   sec.appendChild(parts.form);
 
-  parts.who = el('div', 'group');
+  // Resumo (com login): quem está conectado e o botão de sair.
+  const who = panelRow('Conectado', 'Seus itens são salvos na conta e aparecem nos seus outros aparelhos.');
+  parts.who = who.row;
+  parts.whoTitle = who.title;
+  parts.signOut = actionButton('Sair da conta', signOut);
+  who.actions.appendChild(parts.signOut);
   parts.who.hidden = true;
-  parts.whoText = el('p', 'notes', '');
-  parts.who.appendChild(parts.whoText);
-  const outActs = el('div', 'acts');
-  parts.signOut = button('Sair da conta', signOut);
-  outActs.appendChild(parts.signOut);
-  parts.who.appendChild(outActs);
   sec.appendChild(parts.who);
 
-  parts.msg = el('p', 'notes', '');
+  parts.msg = el('p', 'panel-msg', '');
   parts.msg.setAttribute('role', 'status');
   parts.msg.setAttribute('aria-live', 'polite');
   sec.appendChild(parts.msg);
-
-  $('lista').insertAdjacentElement('afterend', sec);
 }
 
 /** Liga a seção de conta. Chamada uma única vez, em actions.js. */
 export function bindAccount() {
-  if (!$('lista')) return;
+  if (!$('ferramentas')) return;
   build();
   const lib = typeof window !== 'undefined' ? window.supabase : null;
   if (!lib || typeof lib.createClient !== 'function') {
