@@ -23,7 +23,7 @@ planner-academico/
 │   ├── selectors.js      Filtro por matéria e contagens
 │   ├── seed.js           Itens de exemplo da primeira abertura
 │   ├── storage.js        Salvar no navegador e na conta (sincronização)
-│   ├── remote.js         Linha da conta no Supabase, mensagens de erro de login (funções puras)
+│   ├── remote.js         Linha da conta no Supabase, mensagens de erro de login e de sincronização (funções puras)
 │   ├── render.js         Desenho da tela
 │   ├── toast.js          Aviso com "Desfazer"
 │   ├── theme.js          Tema claro e escuro
@@ -50,7 +50,7 @@ planner-academico/
 - Todo CSS usa as variáveis de `tokens.css`. Para mudar uma cor, edite só esse arquivo.
 - Os módulos JavaScript importam uns aos outros com caminhos relativos e sempre na mesma direção, sem ciclos:
 
-  `config, utils, pwa` → `validate, dates` → `state` → `selectors, seed, storage, ics, reminders` → `render, toast` → `backup, agenda` → `actions` → `main`
+  `config, utils, pwa` → `validate, dates, remote` → `state` → `selectors, seed, storage, ics, reminders` → `render, toast` → `backup, agenda` → `account` → `actions` → `main`
 
 - O que o JavaScript procura no HTML são os `id` (por exemplo `form`, `lista`, `filtros`, `status`, `toast`, `tema`, `ferramentas`). Se renomear um `id` no `index.html`, troque também nos módulos.
 - As imagens são referenciadas só em `index.html`, a partir de `assets/img/`.
@@ -72,6 +72,16 @@ O painel **Conta e sincronização** (no fim da página, em **Conta, agenda e ba
 **Segurança.** `js/config.js` tem a URL do projeto e a chave **publishable**, que é pública por desenho e pode ficar no código. Quem protege os dados são as regras do banco (RLS) em `supabase/schema.sql`: cada conta só lê e altera a própria linha. A chave **secreta** (`sb_secret_...`) ou a antiga `service_role` ignoram essas regras e **nunca** podem entrar no repositório; um teste (`tests/estrutura.test.js`) falha se aparecerem.
 
 **Limite importante.** A sincronização compara o documento inteiro, não item por item. Se você editar em dois aparelhos ao mesmo tempo, sem a aba voltar a ficar visível entre as edições, o mais recente sobrescreve o outro. Para não perder nada, o lado que foi substituído (se tinha itens de verdade) é guardado e aparece na seção **Backup** como **Baixar cópia de antes da sincronização**, em formato que **Restaurar de um arquivo** entende.
+
+**Se aparecer "Conectado, mas a sincronização falhou".** O login funcionou, mas a tabela da conta não respondeu. O motivo aparece no painel **Conta e sincronização** e na linha de status. Os mais comuns:
+
+- *Tabela da conta não encontrada* (ou "ainda não existe"): o SQL de `supabase/schema.sql` ainda não foi rodado no painel do Supabase (SQL Editor). Rode e recarregue a página.
+- *Acesso à tabela recusado*: rode o mesmo SQL de novo; ele refaz as permissões e as regras.
+- *Chave recusada*: confira `SUPABASE_URL` e `SUPABASE_KEY` em `js/config.js`.
+- *Sessão expirada*: saia da conta e entre de novo.
+- *Servidor com problema* ou *Sem conexão*: tente de novo mais tarde. Se o projeto gratuito ficou parado por 7 dias, ele foi pausado: retome em **Resume project** no painel.
+
+Enquanto isso, os itens continuam salvos no navegador.
 
 **Configurar do zero (uma vez):**
 
