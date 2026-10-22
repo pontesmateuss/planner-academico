@@ -9,7 +9,7 @@ import { $, el, addPanel, actionButton, panelRow } from './utils.js';
 import { toast } from './toast.js';
 import { connectRemote, disconnectRemote } from './storage.js';
 import { refreshBackupExtras } from './backup.js';
-import { createDocRef, validateCredentials, friendlyAuthError, PASSWORD_MIN } from './remote.js';
+import { createDocRef, validateCredentials, friendlyAuthError, describeSyncError, PASSWORD_MIN } from './remote.js';
 
 let client = null;
 let userId = null;
@@ -48,10 +48,12 @@ function resultMessage(r) {
         : '');
     case 'locked':
       return 'Os dados da conta são de uma versão mais nova do app. Atualize a página.';
-    case 'error':
-      return 'Conectado, mas não foi possível sincronizar agora. Seus itens seguem salvos neste aparelho.';
+    case 'error': {
+      const d = describeSyncError(r.error);
+      return 'Conectado, mas a sincronização falhou. ' + d.short;
+    }
     default:
-      return 'Conectado. Tudo já estava igual.';
+      return '';
   }
 }
 
@@ -68,9 +70,11 @@ async function onSession(session) {
   say('Sincronizando…');
   const result = await connectRemote(createDocRef(client, id));
   if (userId !== id) return; // saiu ou trocou de conta enquanto sincronizava
-  say('');
   refreshBackupExtras();
-  toast(resultMessage(result));
+  // Se falhou, o motivo fica fixo no painel (o aviso na tela some sozinho). Se está tudo igual, não avisa nada.
+  say(result.action === 'error' ? describeSyncError(result.error).text : '');
+  const msg = resultMessage(result);
+  if (msg) toast(msg);
 }
 
 async function run(kind) {
