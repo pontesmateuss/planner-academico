@@ -31,11 +31,11 @@ function fakeRef(doc, { failGet = false, failSet = false } = {}) {
     gets: 0,
     async get() {
       ref.gets++;
-      if (failGet) throw new Error('rede');
+      if (failGet) throw (failGet === true ? new TypeError('Failed to fetch') : failGet);
       return { exists: ref.doc != null, data: () => ref.doc };
     },
     async set(payload) {
-      if (failSet) throw new Error('rede');
+      if (failSet) throw (failSet === true ? new TypeError('Failed to fetch') : failSet);
       ref.sets.push(payload);
       ref.doc = payload;
     }
@@ -201,4 +201,34 @@ test('sair da conta: para de enviar, volta ao "salvo neste navegador" e mantém 
 test('pull sem conta ligada não faz nada', async () => {
   reset([item('a')], 1);
   assert.deepEqual(await pull(), { action: 'skipped', keptCopy: false });
+});
+
+test('tabela da conta inexistente: o resultado traz o erro e o status diz o motivo real', async () => {
+  reset([item('local')], 100);
+  const real = { code: 'PGRST205', message: "Could not find the table 'public.planner_docs' in the schema cache" };
+  const r = await connectRemote(fakeRef(null, { failGet: real }));
+  assert.equal(r.action, 'error');
+  assert.equal(r.error, real);
+  assert.match(status.textContent, /Tabela da conta não encontrada/);
+  assert.match(status.textContent, /Salvo neste navegador/);
+  assert.notEqual(status.textContent, STATUS_TEXT.error, 'não pode mostrar o aviso genérico de "sem conexão"');
+  assert.deepEqual(state.items.map((i) => i.id), ['local']);
+});
+
+test('acesso recusado ao enviar: o status diz o motivo e o item continua no navegador', async () => {
+  reset([item('a')], 100);
+  const ref = fakeRef({ version: DATA_VERSION, items: [item('a')], updatedAt: 100 }, { failSet: { code: '42501', message: 'permission denied for table planner_docs' } });
+  await connectRemote(ref);
+  state.items.push(item('b'));
+  persist();
+  await wait(SAVE_DELAY_MS + 80);
+  assert.match(status.textContent, /Acesso à tabela da conta recusado/);
+  assert.equal(JSON.parse(store.get(STORAGE_KEY)).items.length, 2);
+});
+
+test('sem conexão de verdade continua mostrando o aviso de sempre', async () => {
+  reset([item('a')], 100);
+  const r = await connectRemote(fakeRef(null, { failGet: new TypeError('Failed to fetch') }));
+  assert.equal(r.action, 'error');
+  assert.equal(status.textContent, STATUS_TEXT.error);
 });

@@ -13,6 +13,7 @@ import { STORAGE_KEY, REMOTE_DOC, SAVE_DELAY_MS, STATUS_TEXT } from './config.js
 import { $ } from './utils.js';
 import { state, replaceData, hasExamples } from './state.js';
 import { sanitizeItems, migrate, DATA_VERSION } from './validate.js';
+import { describeSyncError } from './remote.js';
 
 const CORRUPT_KEY = STORAGE_KEY + ':corrompido';
 const BEFORE_MIGRATION_KEY = STORAGE_KEY + ':antes-da-migracao';
@@ -37,6 +38,13 @@ export function setStatus(kind) {
 
 function setStatusText(text) {
   $('status').textContent = text;
+}
+
+/** Mostra na linha de status o motivo real de uma falha na conta (rede, tabela que falta, permissão...). */
+function showSyncError(e) {
+  const d = describeSyncError(e);
+  if (d.kind === 'network') setStatus('error');
+  else setStatusText(d.short + ' Salvo neste navegador.');
 }
 
 /** Guarda uma cópia do que não deu para ler, para o usuário ainda poder recuperar. */
@@ -150,7 +158,7 @@ async function flush() {
     await ref.set(payload);
     if (docRef === ref) setStatus('synced');
   } catch (e) {
-    if (docRef === ref) setStatus('error');
+    if (docRef === ref) showSyncError(e);
   } finally {
     writing = false;
     if (again) { again = false; flush(); }
@@ -160,7 +168,8 @@ async function flush() {
 /** Compara a conta com o navegador e fica com o mais recente.
     Devolve { action, keptCopy }: action é 'applied-remote' (a conta venceu), 'pushed-local' (o navegador venceu e
     foi enviado), 'in-sync', 'skipped' (ocupado ou sem conta), 'locked' (dados de versão mais nova) ou 'error'.
-    keptCopy é true se o lado substituído tinha itens de verdade e uma cópia ficou guardada. */
+    keptCopy é true se o lado substituído tinha itens de verdade e uma cópia ficou guardada.
+    No caso 'error', `error` traz a falha original (use describeSyncError para explicá-la). */
 export async function pull() {
   if (!docRef || locked || writing || saveTimer) return { action: 'skipped', keptCopy: false };
   const ref = docRef;
@@ -202,8 +211,8 @@ export async function pull() {
     setStatus('synced');
     return { action: 'in-sync', keptCopy: false };
   } catch (e) {
-    setStatus('error');
-    return { action: 'error', keptCopy: false };
+    showSyncError(e);
+    return { action: 'error', keptCopy: false, error: e };
   }
 }
 
