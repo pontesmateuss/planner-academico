@@ -17,3 +17,9 @@
 .date::first-letter { text-transform: uppercase; }
 .tools { display: flex; flex-direction: column; align-items: flex-end; gap: 0.35rem; }
 .status { font-size: 0.9rem; color: var(--muted); min-height: 1.4em; text-align: right; }
+
+/* rodapé com os links dos documentos legais (usado no index e nas páginas de privacidade, termos e cookies) */
+.site-foot { max-width: 46rem; margin: 2rem auto 0; padding-top: 0.75rem; border-top: 1px solid var(--line); }
+.site-foot nav { display: flex; flex-wrap: wrap; gap: 0 1.25rem; }
+.site-foot a { display: inline-flex; align-items: center; min-height: 2.75rem; color: var(--muted); font-size: 0.97rem; }
+.site-foot a:hover, .site-foot a[aria-current="page"] { color: var(--accent); }

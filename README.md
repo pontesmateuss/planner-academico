@@ -7,13 +7,17 @@ Site para anotar atividades, provas, trabalhos e lembretes com prazo. Sem build 
 ```
 planner-academico/
 ├── index.html            Estrutura da página (HTML). Só liga os outros arquivos.
+├── privacidade.html      Política de Privacidade
+├── termos.html           Termos de Serviço
+├── cookies.html          Aviso de Cookies
 ├── manifest.webmanifest  Nome, cores e ícones do app instalável
 ├── sw.js                 Service worker: deixa o site abrir sem internet
 ├── css/                  Aparência (CSS)
 │   ├── tokens.css        Cores e fontes, tema claro e escuro
 │   ├── base.css          Reset, tipografia, foco
 │   ├── layout.css        Barra de navegação, coluna central, cabeçalho
-│   └── components.css    Cartão, formulário, botões, filtros, lista, aviso
+│   ├── components.css    Cartão, formulário, botões, filtros, lista, aviso
+│   └── legal.css         Páginas de privacidade, termos e cookies (texto, tabelas)
 ├── js/                   Comportamento (JavaScript, módulos ES)
 │   ├── config.js         Constantes e textos
 │   ├── utils.js          $, el, uid, download e os blocos dos painéis (addPanel, panelRow, actionButton)
@@ -32,6 +36,7 @@ planner-academico/
 │   ├── backup.js         Baixar e restaurar backup (monta o próprio painel em #ferramentas)
 │   ├── agenda.js         Exportar prazos para a agenda e ativar avisos (monta o próprio painel em #ferramentas)
 │   ├── pwa.js            Registra o service worker
+│   ├── legal.js          Aplica o tema escolhido nas páginas de privacidade, termos e cookies
 │   ├── account.js        Tela de login e conta (monta o próprio painel em #ferramentas)
 │   ├── actions.js        Eventos e ações do usuário
 │   └── main.js           Ponto de entrada

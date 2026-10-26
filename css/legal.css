@@ -1,0 +1,46 @@
+/* Páginas de documentos legais (privacidade, termos, cookies). Só usa variáveis de tokens.css. */
+.legal {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1.5rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.legal > * { min-width: 0; }
+.legal h1 { margin-bottom: 0.1rem; }
+.legal h2 { margin-top: 1rem; padding-top: 1.1rem; border-top: 1px solid var(--line); }
+.legal h2:first-of-type { margin-top: 0.25rem; }
+.legal p, .legal li { overflow-wrap: anywhere; }
+.legal ul, .legal ol { margin: 0; padding-left: 1.4rem; display: flex; flex-direction: column; gap: 0.45rem; }
+.legal a { color: var(--accent); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+.legal a:hover { text-decoration-thickness: 3px; }
+.legal strong { font-weight: 700; }
+.legal code {
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 0.88em;
+  background: var(--accent-soft);
+  padding: 0.05rem 0.4rem;
+  border-radius: 6px;
+  overflow-wrap: anywhere;
+}
+.legal mark { background: var(--late-bg); color: var(--late-fg); padding: 0.05rem 0.4rem; border-radius: 6px; font-weight: 700; }
+
+.legal-updated { color: var(--muted); font-size: 1rem; }
+.legal-back { display: inline-flex; align-items: center; min-height: 2.75rem; font-weight: 700; color: var(--accent); }
+
+.legal .notice { flex-direction: column; align-items: stretch; margin-bottom: 0; }
+.legal .notice p { flex: none; font-weight: 700; }
+.legal .notice ul { font-size: 1rem; }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
+.table-wrap:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.legal table { border-collapse: collapse; width: 100%; min-width: 34rem; font-size: 0.97rem; }
+.legal th, .legal td { text-align: left; vertical-align: top; padding: 0.7rem 0.85rem; border-top: 1px solid var(--line); }
+.legal thead th { border-top: 0; background: var(--accent-soft); font-family: var(--font-head); font-weight: 600; font-size: 0.95rem; }
+.legal tbody th { font-weight: 700; }
+
+@media (max-width: 34rem) {
+  .legal { padding: 1.15rem 1rem; }
+}
