@@ -8,7 +8,7 @@
    Ao criar, renomear ou apagar um arquivo do site, atualize PRECACHE e some 1 a CACHE_VERSION.
    O teste tests/estrutura.test.js avisa se a lista ficar diferente dos arquivos que existem. */
 
-const CACHE_VERSION = 4;
+const CACHE_VERSION = 5;
 const CACHE = 'planner-academico-v' + CACHE_VERSION;
 const FONT_CACHE = 'planner-academico-fontes';
 

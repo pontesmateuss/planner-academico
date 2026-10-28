@@ -29,3 +29,16 @@ export function counts() {
   });
   return c;
 }
+
+/** Resumo do dia para o cabeçalho (ignora o filtro de matéria). */
+export function overview() {
+  const o = { hoje: 0, atrasadas: 0, pendentes: 0 };
+  state.items.forEach((it) => {
+    if (it.done) return;
+    o.pendentes++;
+    const d = diffDays(it);
+    if (d === 0) o.hoje++;
+    else if (d !== null && d < 0) o.atrasadas++;
+  });
+  return o;
+}

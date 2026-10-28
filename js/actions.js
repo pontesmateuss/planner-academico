@@ -39,13 +39,32 @@ function removeItem(id) {
   });
 }
 
+/** Mostra ou esconde o formulário. Ao esconder, o botão "+ Nova anotação" volta a ser o ponto de partida. */
+function setFormOpen(open, focusTitle) {
+  $('nova').hidden = !open;
+  $('abrir-form').hidden = open;
+  $('abrir-form').setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (open) {
+    $('nova').scrollIntoView({ block: 'nearest' });
+    if (focusTitle) $('f-titulo').focus();
+  }
+}
+
+function syncTimeField() {
+  const has = !!$('f-data').value;
+  $('campo-hora').hidden = !has;
+  $('f-hora').disabled = !has;
+  if (!has) $('f-hora').value = '';
+}
+
 function resetForm() {
   $('form').reset();
   ui.editingId = null;
-  $('f-hora').disabled = true;
-  $('f-cancelar').hidden = true;
+  $('mais').open = false;
+  syncTimeField();
   $('f-enviar').textContent = 'Adicionar';
   $('form-titulo').textContent = 'Nova anotação';
+  setFormOpen(false);
 }
 
 function startEdit(id) {
@@ -56,15 +75,14 @@ function startEdit(id) {
   $('f-tipo').value = it.type || 'atividade';
   $('f-materia').value = it.subject || '';
   $('f-data').value = it.due || '';
-  $('f-hora').disabled = !it.due;
+  syncTimeField();
   $('f-hora').value = it.due ? (it.time || '') : '';
   $('f-prio').value = it.prio || 'normal';
   $('f-notas').value = it.notes || '';
-  $('f-cancelar').hidden = false;
+  $('mais').open = !!(it.subject || it.time || it.notes || (it.type && it.type !== 'atividade') || (it.prio && it.prio !== 'normal'));
   $('f-enviar').textContent = 'Salvar alterações';
   $('form-titulo').textContent = 'Editar anotação';
-  $('form-titulo').scrollIntoView({ block: 'start' });
-  $('f-titulo').focus();
+  setFormOpen(true, true);
 }
 
 function onSubmit(e) {
@@ -94,19 +112,39 @@ function onSubmit(e) {
   persist();
   resetForm();
   renderAll();
-  $('f-titulo').focus();
+  $('abrir-form').focus();
+}
+
+function isTyping(t) {
+  return !!(t && t.closest && t.closest('input, select, textarea, [contenteditable], dialog[open]'));
 }
 
 /** Liga todos os eventos da página. Chamada uma única vez, em main.js. */
 export function bindEvents() {
   $('form').addEventListener('submit', onSubmit);
-  $('f-cancelar').addEventListener('click', resetForm);
-
-  $('f-data').addEventListener('input', (e) => {
-    const h = $('f-hora');
-    h.disabled = !e.target.value;
-    if (!e.target.value) h.value = '';
+  $('f-cancelar').addEventListener('click', () => { resetForm(); $('abrir-form').focus(); });
+  $('abrir-form').addEventListener('click', () => setFormOpen(true, true));
+  $('f-data').addEventListener('input', syncTimeField);
+  $('nova').addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { resetForm(); $('abrir-form').focus(); }
   });
+
+  // Atalho: "N" abre a nova anotação quando não se está digitando.
+  document.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() !== 'n' || e.ctrlKey || e.metaKey || e.altKey || isTyping(e.target)) return;
+    e.preventDefault();
+    setFormOpen(true, true);
+  });
+
+  // Conta, agenda e backup ficam num painel que abre por cima da página.
+  const cfg = $('config');
+  $('abrir-config').addEventListener('click', () => {
+    if (typeof cfg.showModal === 'function') cfg.showModal();
+    else cfg.setAttribute('open', '');
+    $('config-titulo').focus();
+  });
+  $('fechar-config').addEventListener('click', () => cfg.close());
+  cfg.addEventListener('click', (e) => { if (e.target === cfg) cfg.close(); });
 
   $('filtros').addEventListener('click', (e) => {
     const b = e.target.closest('button[data-view]');
