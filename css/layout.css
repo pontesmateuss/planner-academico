@@ -22,8 +22,13 @@
 /* texto só para leitores de tela */
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
-/* rodapé com os links dos documentos legais (usado no index e nas páginas de privacidade, termos e cookies) */
-.site-foot { max-width: 46rem; margin: 2rem auto 0; padding-top: 0.75rem; border-top: 1px solid var(--line); }
-.site-foot nav { display: flex; flex-wrap: wrap; gap: 0 1.25rem; }
+/* rodapé centralizado: links dos documentos legais (index, privacidade, termos e cookies) e contatos do desenvolvedor */
+.site-foot { max-width: 46rem; margin: 2rem auto 0; padding-top: 1rem; border-top: 1px solid var(--line); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1.25rem; }
+.site-foot nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 1.5rem; }
 .site-foot a { display: inline-flex; align-items: center; min-height: 2.75rem; color: var(--muted); font-size: 0.97rem; }
 .site-foot a:hover, .site-foot a[aria-current="page"] { color: var(--accent); }
+.foot-contact { display: flex; flex-direction: column; align-items: center; gap: 0.1rem; }
+.foot-contact-title { font-size: 0.92rem; color: var(--muted); }
+.foot-contact-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 0 1.5rem; }
+.foot-contact-list a { gap: 0.4rem; }
+.foot-contact-list .handle { font-weight: 400; opacity: 0.85; }
