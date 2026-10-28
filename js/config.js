@@ -38,7 +38,7 @@ export const VIEWS = [
 ];
 
 export const EMPTY = {
-  pendentes: 'Tudo em dia. Adicione uma atividade ou um lembrete no formulário acima.',
+  pendentes: 'Tudo em dia. Toque em “+ Nova anotação” para adicionar uma atividade ou um lembrete.',
   hoje: 'Nada com prazo para hoje.',
   semana: 'Nada com prazo nos próximos 7 dias.',
   atrasadas: 'Nenhuma atividade atrasada.',

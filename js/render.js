@@ -5,7 +5,7 @@ import { TYPES, GROUPS, VIEWS, EMPTY } from './config.js';
 import { $, el } from './utils.js';
 import { today, isoDay, formatLongDate, diffDays, dueLabel, groupOf, compareItems } from './dates.js';
 import { state, ui, hasExamples } from './state.js';
-import { bySubject, subjectNames, counts } from './selectors.js';
+import { bySubject, subjectNames, counts, overview } from './selectors.js';
 
 let dayKey = '';
 
@@ -38,6 +38,8 @@ export function renderSubjects() {
   const names = subjectNames();
   if (ui.subject && !names.some((n) => n.toLowerCase() === ui.subject.toLowerCase())) ui.subject = '';
 
+  // Com menos de duas matérias o filtro não ajuda em nada: some.
+  document.querySelector('.subjsel').hidden = names.length < 2;
   const sel = $('f-filtro-materia');
   sel.replaceChildren();
   const all = el('option', '', 'Todas as matérias');
@@ -152,8 +154,25 @@ export function renderNotice() {
   $('aviso-exemplos').hidden = !hasExamples();
 }
 
+const plural = (n, um, varios) => (n === 1 ? um : varios);
+
+/** Frase curta do cabeçalho: o que pede atenção hoje. */
+export function renderSummary() {
+  const o = overview();
+  let txt;
+  if (!o.pendentes) txt = 'Nada pendente. Aproveite.';
+  else {
+    const parts = [];
+    parts.push(o.hoje ? plural(o.hoje, '1 item', o.hoje + ' itens') + ' para hoje' : 'Nada para hoje');
+    if (o.atrasadas) parts.push(plural(o.atrasadas, '1 atrasada', o.atrasadas + ' atrasadas'));
+    txt = parts.join(' · ');
+  }
+  $('resumo').textContent = txt;
+}
+
 export function renderAll() {
   renderDate();
+  renderSummary();
   renderSubjects();
   renderFilters();
   renderNotice();
